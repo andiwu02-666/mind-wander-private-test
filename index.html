@@ -26,13 +26,46 @@ body{padding-bottom:106px}
 .quick-nav .nav-icon{font-size:21px;font-family:Georgia,var(--serif);line-height:1.2;font-weight:400}
 @media(max-width:650px){body{padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))}.quick-nav{bottom:calc(9px + env(safe-area-inset-bottom,0px));padding:6px;border-radius:20px}.quick-nav button{min-height:55px;font-size:10px}.quick-nav .nav-icon{font-size:20px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.quick-nav button{transition:none}}
+
+/* Each bottom tab opens a separate view rather than scrolling through one document. */
+body[data-view] .hero-area,body[data-view] .stats-wrap,
+body[data-view] #now,body[data-view] #collection,
+body[data-view] #constellations,body[data-view] #backup{display:none}
+body[data-view="home"] .hero-area{display:block}
+body[data-view="home"] .stats-wrap{display:block}
+body[data-view="now"] #now,body[data-view="collection"] #collection,
+body[data-view="constellations"] #constellations{display:block}
+body[data-view="backup"] #backup{display:flex}
+body[data-view="now"] #now,body[data-view="collection"] #collection,
+body[data-view="constellations"] #constellations{margin-top:55px}
+body[data-view="backup"] #backup{margin-top:75px;padding:28px;background:#faf7f0bb;border:1px solid #e1ddd2;border-radius:18px}
+body[data-view="backup"] .backup-area{min-height:230px}
+body[data-view="backup"] main{min-height:calc(100dvh - 220px)}
+body[data-view="now"] main,body[data-view="collection"] main,body[data-view="constellations"] main{min-height:calc(100dvh - 210px)}
+body[data-view="now"] .section-head{margin-bottom:30px}
+body[data-view="now"] #now .featured{width:min(720px,100%)}
+body[data-view="now"] .ongoing-more{margin-top:44px}
+body[data-view="now"] .ongoing-more .work-grid{margin-top:18px}
+body[data-view="now"] .ongoing-more h3{font:500 23px var(--serif);margin:0}
+body[data-view="now"] .ongoing-more .eyebrow{margin-bottom:10px}
+body[data-view="home"] .footer{display:block}
+body[data-view="backup"] .footer{display:block}
+body[data-view="now"] .footer,body[data-view="collection"] .footer,body[data-view="constellations"] .footer{display:none}
+.quick-nav button[aria-current="page"]{color:#355845;background:#e3eae0;font-weight:600}
+@media(max-width:650px){
+ body[data-view="now"] #now,body[data-view="collection"] #collection,
+ body[data-view="constellations"] #constellations{margin-top:39px}
+ body[data-view="backup"] #backup{margin-top:42px;padding:23px 18px}
+ body[data-view="backup"] .backup-actions{justify-content:flex-start;gap:10px}
+ body[data-view="backup"] .backup-actions button{font-size:13px}
+}
 </style></head>
-<body>
+<body data-view="home">
 <header class="nav container"><div class="brand"><span class="brand-mark" aria-hidden="true">游</span><span>精神漫游</span></div><button class="ghost-button" id="navBackup" type="button">数据备份</button></header>
 <section class="hero-area hero"><div class="orbit" aria-hidden="true"></div><div class="container hero-inner"><div class="hero-copy"><div class="eyebrow">PERSONAL CULTURE ARCHIVE</div><h1>在作品之间，<br><em>慢慢长出<br class="mobile-break">自己的地图。</em></h1><p>不追赶数量，也不急着获得答案。把读过、看过与仍在好奇的事物，安静地收在这里。</p><button class="main-button" id="heroAdd">＋ &nbsp;收下一件新作品</button></div></div></section>
 <div class="container stats-wrap"><div class="stats"><div class="stat"><b id="total">0</b><span>全部收藏</span></div><div class="stat"><b id="active">0</b><span>正在探索</span></div><div class="stat"><b id="done">0</b><span>已经抵达</span></div><div class="stats-quote">收藏不是任务清单，是好奇心留下的轨迹。</div></div></div>
 <main class="container">
-<section class="content-section" id="now"><div class="section-head"><div><div class="eyebrow">RIGHT NOW</div><h2 class="section-heading">此刻正在探索</h2></div><button class="text-button" id="random" type="button">不知道选什么？替我抽一个 ↗</button></div><div id="featured"></div></section>
+<section class="content-section" id="now"><div class="section-head"><div><div class="eyebrow">RIGHT NOW</div><h2 class="section-heading">此刻正在探索</h2></div><button class="text-button" id="random" type="button">不知道选什么？替我抽一个 ↗</button></div><div id="featured"></div><div id="ongoingMore" class="ongoing-more"></div></section>
 <section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
 <section class="content-section" id="constellations"><div class="section-head"><div class="path-heading"><div class="eyebrow">CONSTELLATIONS</div><h2 class="section-heading">主题收藏与探索路径</h2><p>有些作品并不属于同一类别，却在悄悄回答同一个问题。</p></div><button class="ghost-button" id="addPath">＋ 建立一条路径</button></div><div class="path-grid" id="pathGrid"></div></section>
 <section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button class="ghost-button" id="import">↑ 导入私人 JSON</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"></div></section>
@@ -69,8 +102,16 @@ function footerTags(w){return (w.tags?.length?w.tags:['收藏','待探索']).sli
 function renderFilters(){ $('statusFilters').innerHTML=statuses.map(s=>'<button type="button" class="pill '+(statusFilter===s?'active':'')+'" data-status="'+s+'">'+s+'</button>').join('');$('categoryFilters').innerHTML=cats.map(c=>'<button type="button" class="subpill '+(categoryFilter===c?'active':'')+'" data-cat="'+c+'">'+c+'</button>').join('');$('statusFilters').querySelectorAll('button').forEach(b=>b.onclick=()=>{statusFilter=b.dataset.status;visibleLimit=18;render()});$('categoryFilters').querySelectorAll('button').forEach(b=>b.onclick=()=>{categoryFilter=b.dataset.cat;visibleLimit=18;render()})}
 function renderFeatured(){let current=works.find(w=>w.status==='进行中');$('featured').innerHTML=current?'<button type="button" class="featured" id="featuredOpen"><small>'+esc(group(current))+' · 约 '+current.progress+'%</small><h3>'+esc(current.title)+'</h3><p>'+esc(brief(current))+'</p><div class="progress-row"><div class="track"><div class="track-fill" style="width:'+current.progress+'%"></div></div></div></button>':'<button type="button" class="featured featured-empty" id="featuredOpen"><small>RIGHT NOW · A SPACE TO EXPLORE</small><h3>此刻还没有正在探索的作品。</h3><p>想读哪一本，想看哪部电影，都可以随时开始。</p></button>';$('featuredOpen').onclick=()=>current?openWork(current.id):openWork(null)}
 function renderWorks(){let shown=works.filter(w=>(statusFilter==='全部'||(statusFilter==='想看'?labelStatus(w.status)==='想看':w.status===statusFilter))&&(categoryFilter==='全部'||group(w)===categoryFilter)&&(!searchText||[w.title,w.category,w.author,w.summary,w.intro,w.notes,...w.tags].join(' ').toLowerCase().includes(searchText)));let shownAll=shown;shown=shownAll.slice(0,visibleLimit);$('moreRow').classList.toggle('hide',shownAll.length<=visibleLimit);$('showMore').textContent='再看看更多作品 · '+Math.min(visibleLimit,shownAll.length)+' / '+shownAll.length+' ↓';$('workGrid').innerHTML=shown.length?shown.map((w,i)=>'<button class="work-card" data-work="'+attr(w.id)+'" type="button"><span class="circle '+colorFor(w,works.indexOf(w))+'"></span><div class="work-meta"><span>'+esc(group(w))+'</span><span class="status-tag">'+esc(labelStatus(w.status))+'</span></div><h3>'+esc(w.title)+'</h3><div class="work-author">'+esc(w.author||'')+'</div><div class="work-desc">'+esc(brief(w))+'</div><div class="work-foot"><span class="tag-line">'+esc(footerTags(w))+'</span><span>'+esc(w.status==='进行中'?'约 '+w.progress+'%':w.status==='已完成'?'已读完':'未开始')+'</span></div></button>').join(''):'<div class="empty-message"><h3>'+(works.length?'还没有找到符合条件的作品':'你的个人作品库，正在等你添上第一笔。')+'</h3><p>'+(works.length?'换个关键词，或取消筛选试试。':'导入私人 JSON 后，这里会显示完整的收藏卡片。')+'</p><button type="button" class="main-button" id="emptyButton">'+(works.length?'清除筛选':'↑ 导入私人数据')+'</button></div>';let eb=$('emptyButton');if(eb)eb.onclick=()=>works.length?(statusFilter='全部',categoryFilter='全部',searchText='',$('search').value='',render()):$('file').click();$('workGrid').querySelectorAll('[data-work]').forEach(el=>el.onclick=()=>openWork(el.dataset.work));$('results').textContent=works.length?'当前显示 '+shown.length+' / '+shownAll.length+' 件符合筛选的作品 · 总收藏 '+works.length+' 件':'这是一个空白模板。你的私人书单、笔记不会出现在公开仓库中。'}
+function renderOngoingMore(){
+  const current=works.filter(w=>w.status==='进行中').slice(1);
+  const area=$('ongoingMore');
+  if(!area)return;
+  if(!current.length){area.innerHTML='';return}
+  area.innerHTML='<div class="eyebrow">ALSO IN PROGRESS</div><h3>还在继续的探索</h3><div class="work-grid">'+current.map((w,i)=>'<button type="button" class="work-card" data-work="'+attr(w.id)+'"><span class="circle '+colorFor(w,works.indexOf(w))+'"></span><div class="work-meta"><span>'+esc(group(w))+'</span><span class="status-tag">进行中</span></div><h3>'+esc(w.title)+'</h3><div class="work-author">'+esc(w.author||'')+'</div><div class="work-desc">'+esc(brief(w))+'</div><div class="work-foot"><span class="tag-line">'+esc(footerTags(w))+'</span><span>约 '+w.progress+'%</span></div></button>').join('')+'</div>';
+  area.querySelectorAll('[data-work]').forEach(el=>el.onclick=()=>openWork(el.dataset.work));
+}
 function renderPaths(){$('pathGrid').innerHTML=paths.length?paths.map((p,i)=>'<button class="path-card '+esc(p.color)+'" data-path="'+attr(p.id)+'" type="button"><span class="path-code">PATH '+String(i+1).padStart(2,'0')+'</span><h3>'+esc(p.title)+'</h3><p>'+esc(p.description||'从一部作品出发，把相关思考串联起来。')+'</p><span class="path-count">'+p.workIds.length+' 部关联作品 · 点击查看</span></button>').join(''):'<div class="path-empty"><div><div class="eyebrow">CONSTELLATIONS</div><p>还没有主题路径。导入私人数据后，这里会出现你的探索路线；也可以自己创建。</p></div></div>';$('pathGrid').querySelectorAll('[data-path]').forEach(el=>el.onclick=()=>openPath(el.dataset.path))}
-function render(){$('total').textContent=works.length;$('active').textContent=works.filter(w=>w.status==='进行中').length;$('done').textContent=works.filter(w=>w.status==='已完成').length;renderFilters();renderFeatured();renderWorks();renderPaths()}
+function render(){$('total').textContent=works.length;$('active').textContent=works.filter(w=>w.status==='进行中').length;$('done').textContent=works.filter(w=>w.status==='已完成').length;renderFilters();renderFeatured();renderOngoingMore();renderWorks();renderPaths()}
 let onClose=null;
 function showDialog(title,body,large=false){$('dialogTitle').textContent=title;$('dialogContent').innerHTML=body;document.querySelector('.dialog').classList.toggle('large',large);$('overlay').classList.add('show');document.body.style.overflow='hidden';$('close').focus()}
 function closeDialog(){$('overlay').classList.remove('show');document.body.style.overflow='';onClose=null}
@@ -90,10 +131,27 @@ let msg='将导入 '+incoming.length+' 部作品和 '+incomingPaths.length+' 条
 let titles=new Map(works.map((w,i)=>[w.title+'|'+w.category,i])),ids=new Set(works.map(w=>w.id)),idMap=new Map();for(let w of incoming){let idx=works.findIndex(x=>x.id===w.id);if(idx<0)idx=titles.get(w.title+'|'+w.category)??-1;if(idx>=0){let old=works[idx];idMap.set(w.id,old.id);works[idx]={...w,...old,author:old.author||w.author,summary:old.summary||w.summary,intro:old.intro||w.intro,tags:old.tags?.length?old.tags:w.tags,notes:old.notes||w.notes,thoughts:old.thoughts?.length?old.thoughts:w.thoughts};}else{let nid=w.id;if(ids.has(nid))nid=uid();idMap.set(w.id,nid);w.id=nid;works.push(w);ids.add(nid);titles.set(w.title+'|'+w.category,works.length-1)}}
 for(let p of incomingPaths){p.workIds=p.workIds.map(id=>idMap.get(id)||id).filter(id=>works.some(w=>w.id===id));if(!paths.some(x=>x.id===p.id||x.title===p.title))paths.push(p)}persist();render();alert('导入成功！当前共有 '+works.length+' 部作品、'+paths.length+' 条探索路径。\n私人笔记只存储在本机 Safari 中。')
 }catch(e){alert('导入失败：'+e.message+'。请选择「精神漫游」JSON 备份文件。')}}
-const quickNav=$document=>document.querySelectorAll('.quick-nav [data-jump]');
-const goSection=id=>{if(id==='top')window.scrollTo({top:0,behavior:'smooth'});else $(id)?.scrollIntoView({behavior:'smooth',block:'start'})};
-quickNav().forEach(button=>button.addEventListener('click',()=>{quickNav().forEach(b=>b.classList.toggle('active',b===button));goSection(button.dataset.jump)}));
-if('IntersectionObserver' in window){const observed=['now','collection','constellations','backup'].map(id=>$(id)).filter(Boolean);const activeNav=id=>quickNav().forEach(b=>b.classList.toggle('active',b.dataset.jump===id));const watch=new IntersectionObserver(entries=>{const shown=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);if(shown.length)activeNav(shown[0].target.id);else if(window.scrollY<100)activeNav('top')},{rootMargin:'-12% 0px -67% 0px',threshold:0});observed.forEach(el=>watch.observe(el))}
-$('navBackup').onclick=()=>document.getElementById('backup').scrollIntoView({behavior:'smooth'});$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
+const quickNav=()=>document.querySelectorAll('.quick-nav [data-jump]');
+const viewNames={home:'首页',now:'正在探索',collection:'作品库',constellations:'主题路径',backup:'私人数据与备份'};
+function switchView(view,updateHistory=true){
+  view=view==='top'?'home':view;
+  if(!Object.prototype.hasOwnProperty.call(viewNames,view))view='home';
+  document.body.dataset.view=view;
+  quickNav().forEach(button=>{
+    const selected=(button.dataset.jump==='top'?'home':button.dataset.jump)===view;
+    button.classList.toggle('active',selected);
+    if(selected)button.setAttribute('aria-current','page');
+    else button.removeAttribute('aria-current');
+  });
+  document.title=viewNames[view]+' · 精神漫游';
+  if(updateHistory&&location.hash!=='#'+view)history.pushState({view},'','#'+view);
+  document.activeElement?.blur?.();
+  window.scrollTo(0,0);
+}
+quickNav().forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.jump)));
+window.addEventListener('popstate',()=>switchView(location.hash.slice(1),false));
+window.addEventListener('hashchange',()=>switchView(location.hash.slice(1),false));
+switchView(location.hash.slice(1)||'home',false);
+$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
 })();
 </script></body></html>
