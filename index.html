@@ -59,6 +59,13 @@ body[data-view="now"] .footer,body[data-view="collection"] .footer,body[data-vie
  body[data-view="backup"] .backup-actions{justify-content:flex-start;gap:10px}
  body[data-view="backup"] .backup-actions button{font-size:13px}
 }
+
+/* Add-only private JSON supplement controls */
+.supplement-tools{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:24px 0 5px}
+.supplement-tools .small-note{font-size:12px}
+.supplement-help{margin:10px 0 15px;max-width:750px;font-size:12px;line-height:1.9;color:#737a6d}
+.backup-area .backup-actions .main-button{box-shadow:none;white-space:normal}
+@media(max-width:650px){.supplement-tools{margin:20px 0 3px}.supplement-tools .main-button{padding:11px 17px}.backup-area .backup-actions{gap:9px}.backup-area .backup-actions .main-button{width:100%}}
 </style></head>
 <body data-view="home">
 <header class="nav container"><div class="brand"><span class="brand-mark" aria-hidden="true">游</span><span>精神漫游</span></div><button class="ghost-button" id="navBackup" type="button">数据备份</button></header>
@@ -66,9 +73,9 @@ body[data-view="now"] .footer,body[data-view="collection"] .footer,body[data-vie
 <div class="container stats-wrap"><div class="stats"><div class="stat"><b id="total">0</b><span>全部收藏</span></div><div class="stat"><b id="active">0</b><span>正在探索</span></div><div class="stat"><b id="done">0</b><span>已经抵达</span></div><div class="stats-quote">收藏不是任务清单，是好奇心留下的轨迹。</div></div></div>
 <main class="container">
 <section class="content-section" id="now"><div class="section-head"><div><div class="eyebrow">RIGHT NOW</div><h2 class="section-heading">此刻正在探索</h2></div><button class="text-button" id="random" type="button">不知道选什么？替我抽一个 ↗</button></div><div id="featured"></div><div id="ongoingMore" class="ongoing-more"></div></section>
-<section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
+<section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="supplement-tools"><button type="button" class="ghost-button" id="appendBooksCollection">＋ 补充作品数据</button><span class="small-note">只新增缺少的作品，保留原有笔记与进度</span></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
 <section class="content-section" id="constellations"><div class="section-head"><div class="path-heading"><div class="eyebrow">CONSTELLATIONS</div><h2 class="section-heading">主题收藏与探索路径</h2><p>有些作品并不属于同一类别，却在悄悄回答同一个问题。</p></div><button class="ghost-button" id="addPath">＋ 建立一条路径</button></div><div class="path-grid" id="pathGrid"></div></section>
-<section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button class="ghost-button" id="import">↑ 导入私人 JSON</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"></div></section>
+<section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button type="button" class="main-button" id="appendBooksBackup">＋ 补充作品数据（只新增）</button><button class="ghost-button" id="import">↑ 合并导入完整备份</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"><input id="supplementFile" type="file" accept=".json,application/json" class="hide"></div></section>
 <footer class="footer">精神漫游 · 让兴趣自由生长</footer>
 </main>
 <nav class="quick-nav" aria-label="页面快捷导航">
@@ -126,6 +133,55 @@ if(existing){$('removeWork').onclick=()=>{if(confirm('确定删除《'+w.title+'
 function openPath(id){let existing=paths.find(p=>p.id===id),p=existing||{id:uid(),title:'',description:'',workIds:[],color:'sage'};let selections=works.map(w=>'<label><input type="checkbox" value="'+attr(w.id)+'" '+(p.workIds.includes(w.id)?'checked':'')+'><span>'+esc(w.title)+'</span></label>').join('');showDialog(existing?'探索路径 · '+p.title:'建立一条探索路径','<form id="pathForm"><div class="form-row"><label for="pathTitle">这条路径想回答什么问题？</label><input id="pathTitle" required maxlength="150" value="'+attr(p.title)+'" placeholder="例如：关于成长的几个问题"></div><div class="form-row"><label for="pathDescription">简介 / 探索动机</label><textarea id="pathDescription" maxlength="1000" placeholder="为什么把这些作品放在一起？">'+esc(p.description)+'</textarea></div><div class="form-row"><label>关联作品（可随时增减）</label><div class="path-select" id="pathSelect">'+(selections||'<p class="small-note">先添加或导入一些作品，再回来选择。</p>')+'</div></div><div class="dialog-actions"><button type="submit" class="main-button">保存路径</button>'+(existing?'<button id="removePath" type="button" class="ghost-button">删除路径</button>':'')+'<span class="spacer"></span><button type="button" class="ghost-button" id="cancelPath">取消</button></div></form>',true);$('cancelPath').onclick=closeDialog;$('pathForm').onsubmit=e=>{e.preventDefault();let title=$('pathTitle').value.trim();if(!title)return;let pp={...p,title,description:$('pathDescription').value.trim(),workIds:[...$('pathSelect').querySelectorAll('input:checked')].map(x=>x.value)};if(existing)paths=paths.map(x=>x.id===id?pp:x);else paths.push(pp);persist();closeDialog();render()};if(existing)$('removePath').onclick=()=>{if(confirm('删除这条探索路径？关联的作品不会删除。')){paths=paths.filter(x=>x.id!==id);persist();closeDialog();render()}}}
 function randomPick(){let choices=works.filter(w=>['想探索','想看','想读','想玩'].includes(w.status));if(!choices.length)return alert('还没有待探索的作品，先导入或添加收藏吧。');let w=choices[Math.floor(Math.random()*choices.length)];showDialog('随机抽到 · '+w.title,'<div style="padding:23px 0"><div class="eyebrow">A SMALL INVITATION</div><h3 style="font:500 32px var(--serif);margin:15px 0">'+esc(w.title)+'</h3><p class="small-note">'+esc(w.author||w.category)+'</p><p style="font:14px/1.9 var(--serif);color:#697267;margin-top:18px">'+esc(brief(w))+'</p></div><div class="dialog-actions"><button type="button" class="main-button" id="openPick">看看这部作品</button><button type="button" class="ghost-button" id="drawAgain">再抽一次 ↗</button></div>');$('openPick').onclick=()=>openWork(w.id);$('drawAgain').onclick=randomPick}
 function exportFile(){const data={version:2,type:'mind-wander-personal-library',exportedAt:new Date().toISOString(),works,paths};let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='精神漫游-私人备份-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
+
+/* Only append entries absent from the current device; never edit existing entries. */
+function matchWorkKey(w){
+  let title=String(w.title||'').normalize('NFKC').toLowerCase()
+    .replace(/[《》「」『』【】\s·・.,，。:：\-—_（）()]/g,'');
+  // Common Chinese edition/title variants of the same book.
+  if(title==='超越自卑')title='自卑与超越';
+  return group(w)+'|'+title;
+}
+async function appendSupplement(file){
+ if(!file)return;
+ try{
+  const data=JSON.parse(await file.text());
+  const arr=Array.isArray(data)?data:data?.works;
+  if(!Array.isArray(arr)||!arr.every(w=>w&&typeof w.title==='string'&&w.title.trim()))throw Error('文件不包含有效的作品清单');
+  const incoming=arr.filter(w=>w.title.trim()!=='梦的解析').map(nwork);
+  const existingKeys=new Set(works.map(matchWorkKey));
+  const additions=[];
+  let skipped=0;
+  for(const w of incoming){
+    const key=matchWorkKey(w);
+    if(existingKeys.has(key)){skipped++;continue;}
+    existingKeys.add(key);
+    // Preserve existing work IDs too; additions should never overwrite a work.
+    if(works.some(existing=>existing.id===w.id)||additions.some(existing=>existing.id===w.id))w.id=uid();
+    additions.push(w);
+  }
+  if(!additions.length){
+    alert('核对完成：这份文件里的作品都已经收藏了，没有新增，也没有修改原有记录。');
+    return;
+  }
+  const message='发现 '+additions.length+' 部未收藏作品，另有 '+skipped+' 部重复。\n\n只会新增缺少的作品；不会覆盖现有的笔记、进度、评分、简介或主题路径。\n\n现在补充吗？';
+  if(!confirm(message))return;
+  const result=[...works,...additions];
+  try{
+    localStorage.setItem(KEY,JSON.stringify(result));
+  }catch(storageError){
+    alert('保存失败：此设备存储空间可能不足。原有收藏未被修改，请先导出备份。');
+    return;
+  }
+  works=result;
+  visibleLimit=18;
+  render();
+  alert('补充成功：新增 '+additions.length+' 部，跳过 '+skipped+' 部已有作品。\n当前共有 '+works.length+' 部收藏。你的原有笔记和阅读进度未被覆盖。');
+ }catch(e){
+  alert('补充失败：'+e.message+'\n请选择「精神漫游·补充书目」JSON 文件。');
+ }
+}
+
 async function importFile(file){if(!file)return;try{let data=JSON.parse(await file.text()),arr=Array.isArray(data)?data:data.works;if(!Array.isArray(arr)||!arr.every(w=>w&&typeof w.title==='string'))throw Error('不是有效的作品库 JSON');let incoming=arr.filter(x=>x.title!=='梦的解析').map(nwork);let incomingPaths=Array.isArray(data.paths)?data.paths.filter(p=>p&&p.title).map(p=>({id:String(p.id||uid()),title:String(p.title),description:String(p.description||''),workIds:Array.isArray(p.workIds)?p.workIds.map(String):[],color:String(p.color||'sage')})):[];
 let msg='将导入 '+incoming.length+' 部作品和 '+incomingPaths.length+' 条主题路径。\n\n如果已有相同作品，会保留当前浏览器里的进度、笔记和想法时间线，并补充新数据中的简介与作者。\n\n确定合并导入吗？';if(!confirm(msg))return;
 let titles=new Map(works.map((w,i)=>[w.title+'|'+w.category,i])),ids=new Set(works.map(w=>w.id)),idMap=new Map();for(let w of incoming){let idx=works.findIndex(x=>x.id===w.id);if(idx<0)idx=titles.get(w.title+'|'+w.category)??-1;if(idx>=0){let old=works[idx];idMap.set(w.id,old.id);works[idx]={...w,...old,author:old.author||w.author,summary:old.summary||w.summary,intro:old.intro||w.intro,tags:old.tags?.length?old.tags:w.tags,notes:old.notes||w.notes,thoughts:old.thoughts?.length?old.thoughts:w.thoughts};}else{let nid=w.id;if(ids.has(nid))nid=uid();idMap.set(w.id,nid);w.id=nid;works.push(w);ids.add(nid);titles.set(w.title+'|'+w.category,works.length-1)}}
@@ -152,6 +208,6 @@ quickNav().forEach(button=>button.addEventListener('click',()=>switchView(button
 window.addEventListener('popstate',()=>switchView(location.hash.slice(1),false));
 window.addEventListener('hashchange',()=>switchView(location.hash.slice(1),false));
 switchView(location.hash.slice(1)||'home',false);
-$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
+$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('appendBooksCollection').onclick=$('appendBooksBackup').onclick=()=>$('supplementFile').click();$('supplementFile').onchange=async e=>{let selected=e.target.files?.[0];await appendSupplement(selected);e.target.value=''};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
 })();
 </script></body></html>
