@@ -73,9 +73,9 @@ body[data-view="now"] .footer,body[data-view="collection"] .footer,body[data-vie
 <div class="container stats-wrap"><div class="stats"><div class="stat"><b id="total">0</b><span>全部收藏</span></div><div class="stat"><b id="active">0</b><span>正在探索</span></div><div class="stat"><b id="done">0</b><span>已经抵达</span></div><div class="stats-quote">收藏不是任务清单，是好奇心留下的轨迹。</div></div></div>
 <main class="container">
 <section class="content-section" id="now"><div class="section-head"><div><div class="eyebrow">RIGHT NOW</div><h2 class="section-heading">此刻正在探索</h2></div><button class="text-button" id="random" type="button">不知道选什么？替我抽一个 ↗</button></div><div id="featured"></div><div id="ongoingMore" class="ongoing-more"></div></section>
-<section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="supplement-tools"><button type="button" class="ghost-button" id="appendBooksCollection">＋ 补充作品数据</button><span class="small-note">只新增缺少的作品，保留原有笔记与进度</span></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
+<section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="supplement-tools"><button type="button" class="ghost-button" id="appendBooksCollection">＋ 补充作品数据</button><button type="button" class="ghost-button" id="updateWorksCollection">✎ 更新已有作品</button><span class="small-note">新增和更新分开操作；更新只修改文件中明确指定的字段</span></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
 <section class="content-section" id="constellations"><div class="section-head"><div class="path-heading"><div class="eyebrow">CONSTELLATIONS</div><h2 class="section-heading">主题收藏与探索路径</h2><p>有些作品并不属于同一类别，却在悄悄回答同一个问题。</p></div><button class="ghost-button" id="addPath">＋ 建立一条路径</button></div><div class="path-grid" id="pathGrid"></div></section>
-<section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button type="button" class="main-button" id="appendBooksBackup">＋ 补充作品数据（只新增）</button><button class="ghost-button" id="import">↑ 合并导入完整备份</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"><input id="supplementFile" type="file" accept=".json,application/json" class="hide"></div></section>
+<section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button type="button" class="main-button" id="appendBooksBackup">＋ 补充作品数据（只新增）</button><button class="ghost-button" id="updateWorksBackup">✎ 更新已有作品</button><button class="ghost-button" id="import">↑ 合并导入完整备份</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"><input id="supplementFile" type="file" accept=".json,application/json" class="hide"><input id="updateFile" type="file" accept=".json,application/json" class="hide"></div></section>
 <footer class="footer">精神漫游 · 让兴趣自由生长</footer>
 </main>
 <nav class="quick-nav" aria-label="页面快捷导航">
@@ -182,6 +182,105 @@ async function appendSupplement(file){
  }
 }
 
+
+/* Apply an explicit, field-level patch for existing items only.
+   Files of type mind-wander-update-patch can never add, delete, or replace the library. */
+async function updateExistingWorks(file){
+ if(!file)return;
+ try{
+  const data=JSON.parse(await file.text());
+  if(!data||data.type!=='mind-wander-update-patch'||!Array.isArray(data.updates))
+   throw Error('这不是「更新已有作品」文件。请使用包含 type: mind-wander-update-patch 的 JSON');
+  if(!data.updates.length)throw Error('没有找到更新项目');
+  const next=works.map(w=>({...w,tags:[...(w.tags||[])],thoughts:[...(w.thoughts||[])]}));
+  const changes=[],skipped=[];
+  const isOwn=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
+  const normTitle=(title)=>matchWorkKey({title,category:'书籍'}).split('|').slice(1).join('|');
+  const changeable={progress:'阅读进度',status:'状态',rating:'评分',author:'创作者',summary:'卡片简介',intro:'补充简介',notes:'个人笔记'};
+  for(const item of data.updates){
+   if(!item||typeof item.title!=='string'||!item.title.trim()){
+    skipped.push('存在缺少作品名称的更新');continue;
+   }
+   if(item.title.trim()==='梦的解析'){skipped.push('《梦的解析》已按你的要求排除');continue}
+   const targetTitle=normTitle(item.title),category=typeof item.category==='string'?item.category.trim():'';
+   let hits=next.map((w,i)=>({w,i})).filter(({w})=>normTitle(w.title)===targetTitle);
+   if(category){
+    const exact=hits.filter(({w})=>w.category===category);
+    hits=exact.length?exact:hits.filter(({w})=>group(w)===group({category}));
+   }
+   if(hits.length!==1){
+    skipped.push('《'+item.title+'》'+(hits.length?'匹配到多个版本，请指定分类':'未找到，未创建新作品'));continue;
+   }
+   const {w}=hits[0],desc=[];
+   const set=item.set&&typeof item.set==='object'&&!Array.isArray(item.set)?item.set:{};
+   for(const key of Object.keys(changeable)){
+    if(!isOwn(set,key))continue;
+    const value=set[key];
+    if(key==='progress'||key==='rating'){
+     if(typeof value!=='number'||!Number.isFinite(value))throw Error('《'+item.title+'》的 '+key+' 必须是数字');
+     const newValue=key==='progress'?Math.min(100,Math.max(0,value)):Math.min(5,Math.max(0,value));
+     if(w[key]!==newValue){desc.push(changeable[key]+' '+w[key]+' → '+newValue);w[key]=newValue}
+    }else if(key==='status'){
+     if(typeof value!=='string'||normalStatus(value)!==value)throw Error('《'+item.title+'》的状态无效');
+     if(w[key]!==value){desc.push('状态 '+w[key]+' → '+value);w[key]=value}
+    }else{
+     if(typeof value!=='string')throw Error('《'+item.title+'》的 '+key+' 必须是文字');
+     if(w[key]!==value){desc.push(key==='notes'?'替换个人笔记（请仔细确认）':'修改'+changeable[key]);w[key]=value}
+    }
+   }
+   if(isOwn(set,'tags')){
+    if(!Array.isArray(set.tags)||!set.tags.every(t=>typeof t==='string'))throw Error('标签必须是文字数组');
+    const val=[...new Set(set.tags.map(t=>t.trim()).filter(Boolean))];
+    if(JSON.stringify(w.tags)!==JSON.stringify(val)){w.tags=val;desc.push('替换整组标签')}
+   }
+   for(const key of ['addTags','removeTags']){
+    if(!isOwn(item,key))continue;
+    if(!Array.isArray(item[key])||!item[key].every(t=>typeof t==='string'))throw Error(key+' 必须是文字数组');
+    const tags=[...new Set(item[key].map(t=>t.trim()).filter(Boolean))];
+    if(key==='addTags'){
+     const added=tags.filter(t=>!w.tags.includes(t));
+     if(added.length){w.tags.push(...added);desc.push('新增标签：'+added.join('、'))}
+    }else{
+     const removed=tags.filter(t=>w.tags.includes(t));
+     if(removed.length){w.tags=w.tags.filter(t=>!removed.includes(t));desc.push('移除标签：'+removed.join('、'))}
+    }
+   }
+   if(isOwn(item,'appendNotes')){
+    if(typeof item.appendNotes!=='string')throw Error('appendNotes 必须是文字');
+    const value=item.appendNotes.trim();
+    if(value&&!w.notes.includes(value)){
+     w.notes=w.notes.trim()?w.notes.trimEnd()+'\n\n'+value:value;
+     desc.push('追加个人笔记');
+    }
+   }
+   if(isOwn(item,'addThoughts')){
+    if(!Array.isArray(item.addThoughts))throw Error('addThoughts 必须是数组');
+    let added=0;
+    for(const thought of item.addThoughts){
+     if(!thought||typeof thought.content!=='string'||!thought.content.trim())throw Error('想法记录的 content 不能为空');
+     const t={date:typeof thought.date==='string'&&thought.date.trim()?thought.date.trim():today(),
+              content:thought.content.trim(),source:typeof thought.source==='string'&&thought.source.trim()?thought.source.trim():'阅读讨论'};
+     if(!w.thoughts.some(x=>x.content===t.content&&x.date===t.date)){w.thoughts.push(t);added++}
+    }
+    if(added)desc.push('新增 '+added+' 条想法时间线');
+   }
+   if(desc.length)changes.push('《'+w.title+'》：'+desc.join('；'));
+  }
+  if(!changes.length){
+   alert('没有需要更新的内容。'+(skipped.length?'\n\n未匹配：\n'+skipped.join('\n'):'\n文件中的记录与现有内容一致。'));return;
+  }
+  const preview='将更新 '+changes.length+' 部已有作品：\n\n'+changes.slice(0,15).join('\n')
+    +(changes.length>15?'\n……另有 '+(changes.length-15)+' 部':'')
+    +(skipped.length?'\n\n跳过 '+skipped.length+' 条：\n'+skipped.slice(0,8).join('\n'):'')
+    +'\n\n只修改以上指定的内容。其他作品、标签、笔记、进度和主题路径不变。\n\n建议先在「备份」下载当前 JSON。确认更新吗？';
+  if(!confirm(preview))return;
+  try{localStorage.setItem(KEY,JSON.stringify(next))}
+  catch(e){alert('保存失败：可能是手机存储空间不足。现有资料未被修改，请先导出备份。');return}
+  works=next;render();
+  alert('更新成功：'+changes.length+' 部作品。'+(skipped.length?'\n跳过 '+skipped.length+' 条未明确匹配的记录。':'')+'\n没有删除任何作品或主题路径。');
+ }catch(e){alert('更新失败：'+e.message+'\n请检查是否使用正确的「作品更新」JSON 文件。')}
+}
+
 async function importFile(file){if(!file)return;try{let data=JSON.parse(await file.text()),arr=Array.isArray(data)?data:data.works;if(!Array.isArray(arr)||!arr.every(w=>w&&typeof w.title==='string'))throw Error('不是有效的作品库 JSON');let incoming=arr.filter(x=>x.title!=='梦的解析').map(nwork);let incomingPaths=Array.isArray(data.paths)?data.paths.filter(p=>p&&p.title).map(p=>({id:String(p.id||uid()),title:String(p.title),description:String(p.description||''),workIds:Array.isArray(p.workIds)?p.workIds.map(String):[],color:String(p.color||'sage')})):[];
 let msg='将导入 '+incoming.length+' 部作品和 '+incomingPaths.length+' 条主题路径。\n\n如果已有相同作品，会保留当前浏览器里的进度、笔记和想法时间线，并补充新数据中的简介与作者。\n\n确定合并导入吗？';if(!confirm(msg))return;
 let titles=new Map(works.map((w,i)=>[w.title+'|'+w.category,i])),ids=new Set(works.map(w=>w.id)),idMap=new Map();for(let w of incoming){let idx=works.findIndex(x=>x.id===w.id);if(idx<0)idx=titles.get(w.title+'|'+w.category)??-1;if(idx>=0){let old=works[idx];idMap.set(w.id,old.id);works[idx]={...w,...old,author:old.author||w.author,summary:old.summary||w.summary,intro:old.intro||w.intro,tags:old.tags?.length?old.tags:w.tags,notes:old.notes||w.notes,thoughts:old.thoughts?.length?old.thoughts:w.thoughts};}else{let nid=w.id;if(ids.has(nid))nid=uid();idMap.set(w.id,nid);w.id=nid;works.push(w);ids.add(nid);titles.set(w.title+'|'+w.category,works.length-1)}}
@@ -208,6 +307,6 @@ quickNav().forEach(button=>button.addEventListener('click',()=>switchView(button
 window.addEventListener('popstate',()=>switchView(location.hash.slice(1),false));
 window.addEventListener('hashchange',()=>switchView(location.hash.slice(1),false));
 switchView(location.hash.slice(1)||'home',false);
-$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('appendBooksCollection').onclick=$('appendBooksBackup').onclick=()=>$('supplementFile').click();$('supplementFile').onchange=async e=>{let selected=e.target.files?.[0];await appendSupplement(selected);e.target.value=''};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
+$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('appendBooksCollection').onclick=$('appendBooksBackup').onclick=()=>$('supplementFile').click();$('supplementFile').onchange=async e=>{let selected=e.target.files?.[0];await appendSupplement(selected);e.target.value=''};$('updateWorksCollection').onclick=$('updateWorksBackup').onclick=()=>$('updateFile').click();$('updateFile').onchange=async e=>{let file=e.target.files?.[0];await updateExistingWorks(file);e.target.value=''};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
 })();
 </script></body></html>
