@@ -73,9 +73,9 @@ body[data-view="now"] .footer,body[data-view="collection"] .footer,body[data-vie
 <div class="container stats-wrap"><div class="stats"><div class="stat"><b id="total">0</b><span>全部收藏</span></div><div class="stat"><b id="active">0</b><span>正在探索</span></div><div class="stat"><b id="done">0</b><span>已经抵达</span></div><div class="stats-quote">收藏不是任务清单，是好奇心留下的轨迹。</div></div></div>
 <main class="container">
 <section class="content-section" id="now"><div class="section-head"><div><div class="eyebrow">RIGHT NOW</div><h2 class="section-heading">此刻正在探索</h2></div><button class="text-button" id="random" type="button">不知道选什么？替我抽一个 ↗</button></div><div id="featured"></div><div id="ongoingMore" class="ongoing-more"></div></section>
-<section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="supplement-tools"><button type="button" class="ghost-button" id="appendBooksCollection">＋ 补充作品数据</button><button type="button" class="ghost-button" id="updateWorksCollection">✎ 更新已有作品</button><span class="small-note">新增和更新分开操作；更新只修改文件中明确指定的字段</span></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
+<section class="content-section" id="collection"><div class="collection-head"><div><div class="eyebrow">MY COLLECTION</div><h2 class="section-heading">作品库</h2></div><input type="search" id="search" autocomplete="off" placeholder="⌕  搜索作品、作者或标签" aria-label="搜索作品、作者或标签"></div><div class="supplement-tools"><button type="button" class="ghost-button" id="syncWorksCollection">↻ 更新作品库</button><span class="small-note">新增作品、修改进度与标签、追加想法，同一个入口完成</span></div><div class="filter-row" id="statusFilters"></div><div class="category-row" id="categoryFilters"></div><div class="work-grid" id="workGrid"></div><div class="more-row hide" id="moreRow"><button class="ghost-button" id="showMore" type="button">再看看更多作品 ↓</button></div><div class="small-note" id="results" style="margin-top:20px"></div></section>
 <section class="content-section" id="constellations"><div class="section-head"><div class="path-heading"><div class="eyebrow">CONSTELLATIONS</div><h2 class="section-heading">主题收藏与探索路径</h2><p>有些作品并不属于同一类别，却在悄悄回答同一个问题。</p></div><button class="ghost-button" id="addPath">＋ 建立一条路径</button></div><div class="path-grid" id="pathGrid"></div></section>
-<section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button type="button" class="main-button" id="appendBooksBackup">＋ 补充作品数据（只新增）</button><button class="ghost-button" id="updateWorksBackup">✎ 更新已有作品</button><button class="ghost-button" id="import">↑ 合并导入完整备份</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"><input id="supplementFile" type="file" accept=".json,application/json" class="hide"><input id="updateFile" type="file" accept=".json,application/json" class="hide"></div></section>
+<section class="backup-area" id="backup"><div><div class="eyebrow">DATA & NOTES</div><h2>私人资料与迁移</h2><p class="small-note">作品、想法时间线与主题路径仅存储在此浏览器，不上传至公开 GitHub。换手机、清理 Safari 数据前，请导出 JSON 备份。</p></div><div class="backup-actions"><button type="button" class="main-button" id="syncWorksBackup">↻ 更新作品库（新增 / 修改）</button><button class="ghost-button" id="import">↑ 合并导入完整备份</button><button class="ghost-button" id="export">↓ 导出备份</button><button class="ghost-button" id="reset">清空本机数据</button><input id="file" type="file" accept=".json,application/json" class="hide"><input id="libraryUpdateFile" type="file" accept=".json,application/json" class="hide"></div></section>
 <footer class="footer">精神漫游 · 让兴趣自由生长</footer>
 </main>
 <nav class="quick-nav" aria-label="页面快捷导航">
@@ -89,7 +89,7 @@ body[data-view="now"] .footer,body[data-view="collection"] .footer,body[data-vie
 <script>
 (()=>{'use strict';
 const KEY='mind-wander-local-v1',PATHKEY='mind-wander-paths-v1';const $=id=>document.getElementById(id);
-const statuses=['全部','想看','进行中','已完成','暂时搁置'];const cats=['全部','书籍','动画','电影','电视剧','游戏','学习主题','纪录片','其他'];
+const statuses=['全部','想看','进行中','已完成','暂时搁置'];const cats=['全部','书籍','漫画','动画','电影','电视剧','游戏','学习主题','纪录片','其他'];
 const normalStatus=s=>['已完成','进行中','暂时搁置','想看','想读','想玩','想探索'].includes(s)?s:'想探索';
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const attr=esc;const uid=()=> 'local-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
@@ -101,7 +101,7 @@ function nwork(w,i){return {id:String(w.id||uid()+'-'+i),title:String(w.title||'
 works=works.filter(x=>x&&x.title!=='梦的解析').map(nwork);paths=paths.filter(x=>x&&x.title).map(x=>({id:String(x.id||uid()),title:String(x.title),description:String(x.description||''),workIds:Array.isArray(x.workIds)?x.workIds.map(String):[],color:String(x.color||'sage')}));
 let statusFilter='全部',categoryFilter='全部',searchText='',visibleLimit=18;
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(works));localStorage.setItem(PATHKEY,JSON.stringify(paths));return true}catch(e){alert('本机存储失败，请尽快导出备份：'+e.message);return false}}
-function group(w){let c=w.category;if(c.includes('漫画')||c.includes('动画'))return '动画';if(c.includes('电影'))return '电影';if(c.includes('剧')&&!c.includes('剧情'))return '电视剧';if(c.includes('游戏')&&!c.includes('设计'))return '游戏';if(c.includes('纪录'))return '纪录片';if(c.includes('学习')||c.includes('知识')||c.includes('历史')||c.includes('哲学')||c.includes('心理')||c.includes('创作'))return '学习主题';if(c.includes('小说')||c.includes('文学')||c.includes('轻小说')||c.includes('书'))return '书籍';return '其他'}
+function group(w){let c=String(w.category||'');if(c.includes('电影'))return '电影';if(c.includes('漫画'))return '漫画';if(c.includes('动画'))return '动画';if(c.includes('剧')&&!c.includes('剧情'))return '电视剧';if(c.includes('游戏')&&!c.includes('设计'))return '游戏';if(c.includes('纪录'))return '纪录片';if(c.includes('学习')||c.includes('知识')||c.includes('历史')||c.includes('哲学')||c.includes('心理')||c.includes('创作'))return '学习主题';if(c.includes('小说')||c.includes('文学')||c.includes('轻小说')||c.includes('书'))return '书籍';return '其他'}
 function labelStatus(s){return ['想探索','想看','想读','想玩'].includes(s)?'想看':s}
 function colorFor(w,i){return ['sage','sand','mist','rose','gold','blue'][(i>=0?i:0)%6]}
 function brief(w){let manual=w.summary&&!/^(先收藏，不急着安排。|想读的一部小说，暂时不提前)/.test(w.summary)?w.summary:'';return manual||w.intro||w.summary||w.notes||'先收藏，不急着安排。等兴趣来到这里，再慢慢展开。'}
@@ -124,7 +124,7 @@ function showDialog(title,body,large=false){$('dialogTitle').textContent=title;$
 function closeDialog(){$('overlay').classList.remove('show');document.body.style.overflow='';onClose=null}
 $('close').onclick=closeDialog;$('overlay').onclick=e=>{if(e.target===$('overlay'))closeDialog()};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('overlay').classList.contains('show'))closeDialog()});
 const options=(opts,chosen)=>opts.map(s=>'<option '+(chosen===s?'selected':'')+'>'+esc(s)+'</option>').join('');
-const categoryOptions=['小说 / 文学','漫画 / 动画','电影','国产剧','海外剧','游戏','哲学 / 心理','历史 / 社会','知识 / 创作','纪录片','轻小说','休闲 / 语言','其他'];
+const categoryOptions=['小说 / 文学','漫画','动画','电影','国产剧','海外剧','游戏','哲学 / 心理','历史 / 社会','知识 / 创作','纪录片','轻小说','休闲 / 语言','其他'];
 function openWork(id){let existing=works.find(w=>w.id===id);let w=existing||nwork({title:'',category:'小说 / 文学',status:'想探索'},0);let catsAll=[...new Set([...categoryOptions,...works.map(x=>x.category),w.category])];let body='<form id="workForm"><div class="form-row"><label for="workTitle">作品名称</label><input id="workTitle" required maxlength="180" value="'+attr(existing?w.title:'')+'" placeholder="写下作品名称"></div><div class="form-row"><div class="cols"><div><label for="workCategory">作品分类</label><select id="workCategory">'+options(catsAll,w.category)+'</select></div><div><label for="workStatus">探索状态</label><select id="workStatus">'+options(['想探索','想读','想看','想玩','进行中','已完成','暂时搁置'],w.status)+'</select></div></div></div><div class="form-row"><label for="workAuthor">作者 / 创作者（可选）</label><input id="workAuthor" maxlength="160" value="'+attr(w.author)+'"></div><div class="form-row"><div class="cols"><div><label for="workProgress">进度（0–100%）</label><input type="number" id="workProgress" min="0" max="100" value="'+w.progress+'"></div><div><label for="workRating">评分（0–5，可选）</label><input type="number" id="workRating" min="0" max="5" step="0.5" value="'+w.rating+'"></div></div></div><div class="form-row"><label for="workSummary">卡片简介（可选）</label><textarea id="workSummary" maxlength="1000" placeholder="一行介绍、推荐理由或想探索的问题">'+esc(w.summary||w.intro)+'</textarea></div><div class="form-row"><label for="workTags">标签（用逗号分隔）</label><input id="workTags" value="'+attr(w.tags.join('，'))+'" placeholder="例如：成长，文学，人物"></div><div class="form-row"><label for="workNotes">个人笔记（只有当前浏览器能看到）</label><textarea id="workNotes" placeholder="记下你的想法，不必写成完整的读书笔记">'+esc(w.notes)+'</textarea></div><div class="dialog-actions"><button class="main-button" type="submit">保存作品</button>'+(existing?'<button type="button" class="ghost-button" id="removeWork">删除作品</button>':'')+'<span class="spacer"></span><button type="button" class="ghost-button" id="cancelWork">取消</button></div></form>';
 if(existing)body+='<div style="border-top:1px solid var(--line);margin-top:20px;padding-top:18px"><div class="eyebrow">THOUGHT TIMELINE</div><h3 style="font:500 20px var(--serif);margin:10px 0">想法时间线</h3><div class="thought-list" id="thoughtList">'+(w.thoughts.length?w.thoughts.map((t,i)=>'<div class="thought"><div class="date">'+esc(t.date)+' · '+esc(t.source)+'</div><div class="body">'+esc(t.content)+'</div><button type="button" data-remove-thought="'+i+'">删除这条记录</button></div>').join(''):'<p class="small-note">还没有记录。每次想到新的问题，都可以留下日期和想法。</p>')+'</div><div class="form-row"><label for="newThought">记录一条新想法</label><textarea id="newThought" placeholder="今天读到哪里？想到什么问题？"></textarea></div><button type="button" id="addThought" class="ghost-button">＋ 加入时间线</button></div>';
 showDialog(existing?'编辑 · '+w.title:'收下一件新作品',body,true);
@@ -134,151 +134,117 @@ function openPath(id){let existing=paths.find(p=>p.id===id),p=existing||{id:uid(
 function randomPick(){let choices=works.filter(w=>['想探索','想看','想读','想玩'].includes(w.status));if(!choices.length)return alert('还没有待探索的作品，先导入或添加收藏吧。');let w=choices[Math.floor(Math.random()*choices.length)];showDialog('随机抽到 · '+w.title,'<div style="padding:23px 0"><div class="eyebrow">A SMALL INVITATION</div><h3 style="font:500 32px var(--serif);margin:15px 0">'+esc(w.title)+'</h3><p class="small-note">'+esc(w.author||w.category)+'</p><p style="font:14px/1.9 var(--serif);color:#697267;margin-top:18px">'+esc(brief(w))+'</p></div><div class="dialog-actions"><button type="button" class="main-button" id="openPick">看看这部作品</button><button type="button" class="ghost-button" id="drawAgain">再抽一次 ↗</button></div>');$('openPick').onclick=()=>openWork(w.id);$('drawAgain').onclick=randomPick}
 function exportFile(){const data={version:2,type:'mind-wander-personal-library',exportedAt:new Date().toISOString(),works,paths};let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='精神漫游-私人备份-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
 
-/* Only append entries absent from the current device; never edit existing entries. */
-function matchWorkKey(w){
-  let title=String(w.title||'').normalize('NFKC').toLowerCase()
-    .replace(/[《》「」『』【】\s·・.,，。:：\-—_（）()]/g,'');
-  // Common Chinese edition/title variants of the same book.
-  if(title==='超越自卑')title='自卑与超越';
-  return group(w)+'|'+title;
+
+/* Unified library update: add missing works and apply explicit, field-level patches.
+   An ordinary works list NEVER overwrites existing records. */
+function normalizedWorkTitle(title){
+ let t=String(title||'').normalize('NFKC').toLowerCase().replace(/[《》「」『』【】\s·・.,，。:：\-—_（）()]/g,'');
+ return t==='超越自卑'?'自卑与超越':t;
 }
-async function appendSupplement(file){
+function matchWorkKey(w){return group(w)+'|'+normalizedWorkTitle(w.title)}
+async function updateLibrary(file){
  if(!file)return;
  try{
   const data=JSON.parse(await file.text());
-  const arr=Array.isArray(data)?data:data?.works;
-  if(!Array.isArray(arr)||!arr.every(w=>w&&typeof w.title==='string'&&w.title.trim()))throw Error('文件不包含有效的作品清单');
-  const incoming=arr.filter(w=>w.title.trim()!=='梦的解析').map(nwork);
-  const existingKeys=new Set(works.map(matchWorkKey));
-  const additions=[];
-  let skipped=0;
-  for(const w of incoming){
-    const key=matchWorkKey(w);
-    if(existingKeys.has(key)){skipped++;continue;}
-    existingKeys.add(key);
-    // Preserve existing work IDs too; additions should never overwrite a work.
-    if(works.some(existing=>existing.id===w.id)||additions.some(existing=>existing.id===w.id))w.id=uid();
-    additions.push(w);
-  }
-  if(!additions.length){
-    alert('核对完成：这份文件里的作品都已经收藏了，没有新增，也没有修改原有记录。');
-    return;
-  }
-  const message='发现 '+additions.length+' 部未收藏作品，另有 '+skipped+' 部重复。\n\n只会新增缺少的作品；不会覆盖现有的笔记、进度、评分、简介或主题路径。\n\n现在补充吗？';
-  if(!confirm(message))return;
-  const result=[...works,...additions];
-  try{
-    localStorage.setItem(KEY,JSON.stringify(result));
-  }catch(storageError){
-    alert('保存失败：此设备存储空间可能不足。原有收藏未被修改，请先导出备份。');
-    return;
-  }
-  works=result;
-  visibleLimit=18;
-  render();
-  alert('补充成功：新增 '+additions.length+' 部，跳过 '+skipped+' 部已有作品。\n当前共有 '+works.length+' 部收藏。你的原有笔记和阅读进度未被覆盖。');
- }catch(e){
-  alert('补充失败：'+e.message+'\n请选择「精神漫游·补充书目」JSON 文件。');
- }
-}
-
-
-/* Apply an explicit, field-level patch for existing items only.
-   Files of type mind-wander-update-patch can never add, delete, or replace the library. */
-async function updateExistingWorks(file){
- if(!file)return;
- try{
-  const data=JSON.parse(await file.text());
-  if(!data||data.type!=='mind-wander-update-patch'||!Array.isArray(data.updates))
-   throw Error('这不是「更新已有作品」文件。请使用包含 type: mind-wander-update-patch 的 JSON');
-  if(!data.updates.length)throw Error('没有找到更新项目');
+  const hasWorks=Array.isArray(data)||Array.isArray(data?.works);
+  const hasUpdates=Array.isArray(data?.updates);
+  if(!hasWorks&&!hasUpdates)throw Error('文件缺少 works（新增）或 updates（修改）数组');
+  if(data?.works!==undefined&&!Array.isArray(data.works))throw Error('works 必须是数组');
+  if(data?.updates!==undefined&&!Array.isArray(data.updates))throw Error('updates 必须是数组');
+  const additionsIn=Array.isArray(data)?data:(data.works||[]);
+  const patches=Array.isArray(data?.updates)?data.updates:[];
+  if(!additionsIn.length&&!patches.length)throw Error('文件中没有作品更新');
+  if(!additionsIn.every(w=>w&&typeof w.title==='string'&&w.title.trim()))throw Error('新增作品缺少有效名称');
+  if(!patches.every(p=>p&&typeof p.title==='string'&&p.title.trim()))throw Error('修改项目缺少有效名称');
   const next=works.map(w=>({...w,tags:[...(w.tags||[])],thoughts:[...(w.thoughts||[])]}));
-  const changes=[],skipped=[];
-  const isOwn=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
-  const normTitle=(title)=>matchWorkKey({title,category:'书籍'}).split('|').slice(1).join('|');
-  const changeable={progress:'阅读进度',status:'状态',rating:'评分',author:'创作者',summary:'卡片简介',intro:'补充简介',notes:'个人笔记'};
-  for(const item of data.updates){
-   if(!item||typeof item.title!=='string'||!item.title.trim()){
-    skipped.push('存在缺少作品名称的更新');continue;
+  const keys=new Set(next.map(matchWorkKey)),ids=new Set(next.map(w=>w.id));
+  const added=[],changed=[],skipped=[],has=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
+  for(const source of additionsIn){
+   if(normalizedWorkTitle(source.title)==='梦的解析'){skipped.push('《梦的解析》（按要求排除）');continue}
+   const w=nwork(source),key=matchWorkKey(w);
+   if(keys.has(key)){skipped.push('《'+w.title+'》（已收藏，不覆盖）');continue}
+   while(ids.has(w.id))w.id=uid();
+   ids.add(w.id);keys.add(key);next.push(w);added.push(w.title);
+  }
+  const permitted={progress:'进度',status:'状态',rating:'评分',author:'作者',summary:'卡片简介',intro:'简介',notes:'私人笔记'};
+  for(const patch of patches){
+   if(normalizedWorkTitle(patch.title)==='梦的解析'){skipped.push('《梦的解析》（按要求排除）');continue}
+   const name=normalizedWorkTitle(patch.title);
+   let candidates=next.filter(w=>normalizedWorkTitle(w.title)===name);
+   if(typeof patch.category==='string'&&patch.category.trim()){
+    const exact=candidates.filter(w=>w.category===patch.category.trim());
+    candidates=exact.length?exact:candidates.filter(w=>group(w)===group({category:patch.category}));
    }
-   if(item.title.trim()==='梦的解析'){skipped.push('《梦的解析》已按你的要求排除');continue}
-   const targetTitle=normTitle(item.title),category=typeof item.category==='string'?item.category.trim():'';
-   let hits=next.map((w,i)=>({w,i})).filter(({w})=>normTitle(w.title)===targetTitle);
-   if(category){
-    const exact=hits.filter(({w})=>w.category===category);
-    hits=exact.length?exact:hits.filter(({w})=>group(w)===group({category}));
+   if(candidates.length!==1){
+    skipped.push('《'+patch.title+'》'+(candidates.length?'（同名多版本，需指明分类）':'（不存在，未新增）'));continue;
    }
-   if(hits.length!==1){
-    skipped.push('《'+item.title+'》'+(hits.length?'匹配到多个版本，请指定分类':'未找到，未创建新作品'));continue;
-   }
-   const {w}=hits[0],desc=[];
-   const set=item.set&&typeof item.set==='object'&&!Array.isArray(item.set)?item.set:{};
-   for(const key of Object.keys(changeable)){
-    if(!isOwn(set,key))continue;
+   const w=candidates[0],details=[];
+   const set=patch.set&&typeof patch.set==='object'&&!Array.isArray(patch.set)?patch.set:{};
+   for(const key of Object.keys(permitted)){
+    if(!has(set,key))continue;
     const value=set[key];
     if(key==='progress'||key==='rating'){
-     if(typeof value!=='number'||!Number.isFinite(value))throw Error('《'+item.title+'》的 '+key+' 必须是数字');
-     const newValue=key==='progress'?Math.min(100,Math.max(0,value)):Math.min(5,Math.max(0,value));
-     if(w[key]!==newValue){desc.push(changeable[key]+' '+w[key]+' → '+newValue);w[key]=newValue}
+     if(typeof value!=='number'||!Number.isFinite(value))throw Error('《'+patch.title+'》的'+permitted[key]+'应为数字');
+     const v=key==='progress'?Math.max(0,Math.min(100,value)):Math.max(0,Math.min(5,value));
+     if(w[key]!==v){details.push(permitted[key]+'：'+w[key]+(key==='progress'?'%':'')+' → '+v+(key==='progress'?'%':''));w[key]=v}
     }else if(key==='status'){
-     if(typeof value!=='string'||normalStatus(value)!==value)throw Error('《'+item.title+'》的状态无效');
-     if(w[key]!==value){desc.push('状态 '+w[key]+' → '+value);w[key]=value}
+     if(typeof value!=='string'||normalStatus(value)!==value)throw Error('《'+patch.title+'》状态无效');
+     if(w[key]!==value){details.push('状态：'+w[key]+' → '+value);w[key]=value}
     }else{
-     if(typeof value!=='string')throw Error('《'+item.title+'》的 '+key+' 必须是文字');
-     if(w[key]!==value){desc.push(key==='notes'?'替换个人笔记（请仔细确认）':'修改'+changeable[key]);w[key]=value}
+     if(typeof value!=='string')throw Error('《'+patch.title+'》的'+permitted[key]+'应为文字');
+     if(w[key]!==value){details.push(key==='notes'?'替换私人笔记（请确认）':'修改'+permitted[key]);w[key]=value}
     }
    }
-   if(isOwn(set,'tags')){
+   if(has(set,'tags')){
     if(!Array.isArray(set.tags)||!set.tags.every(t=>typeof t==='string'))throw Error('标签必须是文字数组');
-    const val=[...new Set(set.tags.map(t=>t.trim()).filter(Boolean))];
-    if(JSON.stringify(w.tags)!==JSON.stringify(val)){w.tags=val;desc.push('替换整组标签')}
+    const tags=[...new Set(set.tags.map(t=>t.trim()).filter(Boolean))];
+    if(JSON.stringify(w.tags)!==JSON.stringify(tags)){w.tags=tags;details.push('替换全部标签')}
    }
    for(const key of ['addTags','removeTags']){
-    if(!isOwn(item,key))continue;
-    if(!Array.isArray(item[key])||!item[key].every(t=>typeof t==='string'))throw Error(key+' 必须是文字数组');
-    const tags=[...new Set(item[key].map(t=>t.trim()).filter(Boolean))];
+    if(!has(patch,key))continue;
+    if(!Array.isArray(patch[key])||!patch[key].every(t=>typeof t==='string'))throw Error(key+'必须是文字数组');
+    const tags=[...new Set(patch[key].map(t=>t.trim()).filter(Boolean))];
     if(key==='addTags'){
-     const added=tags.filter(t=>!w.tags.includes(t));
-     if(added.length){w.tags.push(...added);desc.push('新增标签：'+added.join('、'))}
+     const novel=tags.filter(t=>!w.tags.includes(t));
+     if(novel.length){w.tags.push(...novel);details.push('新增标签：'+novel.join('、'))}
     }else{
      const removed=tags.filter(t=>w.tags.includes(t));
-     if(removed.length){w.tags=w.tags.filter(t=>!removed.includes(t));desc.push('移除标签：'+removed.join('、'))}
+     if(removed.length){w.tags=w.tags.filter(t=>!removed.includes(t));details.push('移除标签：'+removed.join('、'))}
     }
    }
-   if(isOwn(item,'appendNotes')){
-    if(typeof item.appendNotes!=='string')throw Error('appendNotes 必须是文字');
-    const value=item.appendNotes.trim();
-    if(value&&!w.notes.includes(value)){
-     w.notes=w.notes.trim()?w.notes.trimEnd()+'\n\n'+value:value;
-     desc.push('追加个人笔记');
-    }
+   if(has(patch,'appendNotes')){
+    if(typeof patch.appendNotes!=='string')throw Error('追加笔记必须是文字');
+    const note=patch.appendNotes.trim();
+    if(note&&!w.notes.includes(note)){w.notes=w.notes.trim()?w.notes.trimEnd()+'\n\n'+note:note;details.push('追加私人笔记')}
    }
-   if(isOwn(item,'addThoughts')){
-    if(!Array.isArray(item.addThoughts))throw Error('addThoughts 必须是数组');
-    let added=0;
-    for(const thought of item.addThoughts){
-     if(!thought||typeof thought.content!=='string'||!thought.content.trim())throw Error('想法记录的 content 不能为空');
-     const t={date:typeof thought.date==='string'&&thought.date.trim()?thought.date.trim():today(),
-              content:thought.content.trim(),source:typeof thought.source==='string'&&thought.source.trim()?thought.source.trim():'阅读讨论'};
-     if(!w.thoughts.some(x=>x.content===t.content&&x.date===t.date)){w.thoughts.push(t);added++}
+   if(has(patch,'addThoughts')){
+    if(!Array.isArray(patch.addThoughts))throw Error('新增想法必须是数组');
+    let n=0;
+    for(const t of patch.addThoughts){
+     if(!t||typeof t.content!=='string'||!t.content.trim())throw Error('想法内容不能为空');
+     const thought={date:typeof t.date==='string'&&t.date.trim()?t.date.trim():today(),
+      content:t.content.trim(),source:typeof t.source==='string'&&t.source.trim()?t.source.trim():'阅读讨论'};
+     if(!w.thoughts.some(x=>x.date===thought.date&&x.content===thought.content)){w.thoughts.push(thought);n++}
     }
-    if(added)desc.push('新增 '+added+' 条想法时间线');
+    if(n)details.push('追加'+n+'条想法时间线');
    }
-   if(desc.length)changes.push('《'+w.title+'》：'+desc.join('；'));
+   if(details.length)changed.push('《'+w.title+'》：'+details.join('；'));
   }
-  if(!changes.length){
-   alert('没有需要更新的内容。'+(skipped.length?'\n\n未匹配：\n'+skipped.join('\n'):'\n文件中的记录与现有内容一致。'));return;
+  if(!added.length&&!changed.length){
+   alert('核对完成：没有需要更新的作品。'+(skipped.length?'\n跳过 '+skipped.length+' 条重复或未匹配记录。':''));return;
   }
-  const preview='将更新 '+changes.length+' 部已有作品：\n\n'+changes.slice(0,15).join('\n')
-    +(changes.length>15?'\n……另有 '+(changes.length-15)+' 部':'')
-    +(skipped.length?'\n\n跳过 '+skipped.length+' 条：\n'+skipped.slice(0,8).join('\n'):'')
-    +'\n\n只修改以上指定的内容。其他作品、标签、笔记、进度和主题路径不变。\n\n建议先在「备份」下载当前 JSON。确认更新吗？';
+  const preview='本次作品库更新：\n'
+    +(added.length?'\n新增 '+added.length+' 部作品：'+added.slice(0,8).join('、')+(added.length>8?' 等':''):'')
+    +(changed.length?'\n修改 '+changed.length+' 部作品：\n'+changed.slice(0,12).join('\n')+(changed.length>12?'\n……另有 '+(changed.length-12)+' 部':''):'')
+    +(skipped.length?'\n\n跳过 '+skipped.length+' 条已收藏或未匹配记录':'')
+    +'\n\n只更改补丁指定字段，其他进度、笔记、历史想法和主题路径保留。'
+    +'\n建议先从「备份」导出资料。\n\n确认应用更新吗？';
   if(!confirm(preview))return;
   try{localStorage.setItem(KEY,JSON.stringify(next))}
-  catch(e){alert('保存失败：可能是手机存储空间不足。现有资料未被修改，请先导出备份。');return}
-  works=next;render();
-  alert('更新成功：'+changes.length+' 部作品。'+(skipped.length?'\n跳过 '+skipped.length+' 条未明确匹配的记录。':'')+'\n没有删除任何作品或主题路径。');
- }catch(e){alert('更新失败：'+e.message+'\n请检查是否使用正确的「作品更新」JSON 文件。')}
+  catch(e){alert('存储失败：原数据未改变。请先导出备份。');return}
+  works=next;visibleLimit=18;render();
+  alert('更新完成：新增 '+added.length+' 部，修改 '+changed.length+' 部，跳过 '+skipped.length+' 条。');
+ }catch(e){alert('作品库更新失败：'+e.message+'\n请使用精神漫游的 JSON 补充包或更新包。')}
 }
 
 async function importFile(file){if(!file)return;try{let data=JSON.parse(await file.text()),arr=Array.isArray(data)?data:data.works;if(!Array.isArray(arr)||!arr.every(w=>w&&typeof w.title==='string'))throw Error('不是有效的作品库 JSON');let incoming=arr.filter(x=>x.title!=='梦的解析').map(nwork);let incomingPaths=Array.isArray(data.paths)?data.paths.filter(p=>p&&p.title).map(p=>({id:String(p.id||uid()),title:String(p.title),description:String(p.description||''),workIds:Array.isArray(p.workIds)?p.workIds.map(String):[],color:String(p.color||'sage')})):[];
@@ -307,6 +273,6 @@ quickNav().forEach(button=>button.addEventListener('click',()=>switchView(button
 window.addEventListener('popstate',()=>switchView(location.hash.slice(1),false));
 window.addEventListener('hashchange',()=>switchView(location.hash.slice(1),false));
 switchView(location.hash.slice(1)||'home',false);
-$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('appendBooksCollection').onclick=$('appendBooksBackup').onclick=()=>$('supplementFile').click();$('supplementFile').onchange=async e=>{let selected=e.target.files?.[0];await appendSupplement(selected);e.target.value=''};$('updateWorksCollection').onclick=$('updateWorksBackup').onclick=()=>$('updateFile').click();$('updateFile').onchange=async e=>{let file=e.target.files?.[0];await updateExistingWorks(file);e.target.value=''};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
+$('navBackup').onclick=()=>switchView('backup');$('heroAdd').onclick=()=>openWork(null);$('addPath').onclick=()=>openPath(null);$('random').onclick=randomPick;$('showMore').onclick=()=>{visibleLimit+=18;renderWorks()};$('search').oninput=e=>{searchText=e.target.value.trim().toLowerCase();visibleLimit=18;renderWorks()};$('syncWorksCollection').onclick=$('syncWorksBackup').onclick=()=>$('libraryUpdateFile').click();$('libraryUpdateFile').onchange=async e=>{let file=e.target.files?.[0];await updateLibrary(file);e.target.value=''};$('import').onclick=()=>$('file').click();$('file').onchange=async e=>{let file=e.target.files?.[0];await importFile(file);e.target.value=''};$('export').onclick=exportFile;$('reset').onclick=()=>{if(!confirm('要清空此浏览器中的全部作品、笔记、想法时间线和主题路径吗？\n\n此操作不能撤销。建议先导出备份。'))return;if(!confirm('最后确认：真的要清空本机所有私人数据吗？'))return;works=[];paths=[];persist();render()};render();
 })();
 </script></body></html>
