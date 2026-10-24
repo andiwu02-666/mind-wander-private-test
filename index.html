@@ -153,12 +153,15 @@ async function updateLibrary(file){
   if(data?.updates!==undefined&&!Array.isArray(data.updates))throw Error('updates 必须是数组');
   const additionsIn=Array.isArray(data)?data:(data.works||[]);
   const patches=Array.isArray(data?.updates)?data.updates:[];
-  if(!additionsIn.length&&!patches.length)throw Error('文件中没有作品更新');
+  const incomingPaths=Array.isArray(data?.paths)?data.paths:[];
+  if(data?.paths!==undefined&&!Array.isArray(data.paths))throw Error('paths 必须是数组');
+  if(!additionsIn.length&&!patches.length&&!incomingPaths.length)throw Error('文件中没有作品或路径更新');
   if(!additionsIn.every(w=>w&&typeof w.title==='string'&&w.title.trim()))throw Error('新增作品缺少有效名称');
   if(!patches.every(p=>p&&typeof p.title==='string'&&p.title.trim()))throw Error('修改项目缺少有效名称');
   const next=works.map(w=>({...w,tags:[...(w.tags||[])],thoughts:[...(w.thoughts||[])]}));
   const keys=new Set(next.map(matchWorkKey)),ids=new Set(next.map(w=>w.id));
   const added=[],changed=[],skipped=[],has=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
+  const nextPaths=paths.map(p=>({...p,workIds:[...(p.workIds||[])]})),addedPaths=[],updatedPaths=[];
   for(const source of additionsIn){
    if(normalizedWorkTitle(source.title)==='梦的解析'){skipped.push('《梦的解析》（按要求排除）');continue}
    const w=nwork(source),key=matchWorkKey(w);
@@ -230,20 +233,63 @@ async function updateLibrary(file){
    }
    if(details.length)changed.push('《'+w.title+'》：'+details.join('；'));
   }
-  if(!added.length&&!changed.length){
+  // Theme paths resolve their work references on this device, never relying on
+  // IDs from a separate file. Existing paths preserve their notes and links.
+  for(const source of incomingPaths){
+   if(!source||typeof source.title!=='string'||!source.title.trim())
+     throw Error('主题路径缺少名称');
+   const title=source.title.trim();
+   const refs=Array.isArray(source.workRefs)?source.workRefs:[];
+   const ids=Array.isArray(source.workIds)?source.workIds:[];
+   const linked=[];
+   for(const ref of refs){
+    if(!ref||typeof ref.title!=='string'||!ref.title.trim())throw Error('路径作品关联缺少名称');
+    let hits=next.filter(w=>normalizedWorkTitle(w.title)===normalizedWorkTitle(ref.title));
+    if(typeof ref.category==='string'&&ref.category.trim()){
+     const exact=hits.filter(w=>w.category===ref.category.trim());
+     hits=exact.length?exact:hits.filter(w=>group(w)===group({category:ref.category}));
+    }
+    if(hits.length===1){if(!linked.includes(hits[0].id))linked.push(hits[0].id)}
+    else skipped.push('路径「'+title+'」：'+ref.title+(hits.length?'（同名多媒介，需要标明分类）':'（收藏库里暂不存在）'));
+   }
+   for(const itemId of ids){
+    const linkedWork=next.find(w=>w.id===String(itemId));
+    if(linkedWork&&!linked.includes(linkedWork.id))linked.push(linkedWork.id);
+   }
+   const found=nextPaths.find(p=>p.title===title);
+   if(found){
+    const novel=linked.filter(id=>!found.workIds.includes(id));
+    if(novel.length){found.workIds.push(...novel);updatedPaths.push('「'+title+'」新增 '+novel.length+' 个关联')}
+    // Never overwrite an existing path's description, color, or prior links.
+   }else{
+    nextPaths.push({id:uid(),title,description:typeof source.description==='string'?source.description:'',
+     workIds:linked,color:['sage','sand','mist','rose','gold','blue'].includes(source.color)?source.color:'sage'});
+    addedPaths.push(title);
+   }
+  }
+  if(!added.length&&!changed.length&&!addedPaths.length&&!updatedPaths.length){
    alert('核对完成：没有需要更新的作品。'+(skipped.length?'\n跳过 '+skipped.length+' 条重复或未匹配记录。':''));return;
   }
   const preview='本次作品库更新：\n'
     +(added.length?'\n新增 '+added.length+' 部作品：'+added.slice(0,8).join('、')+(added.length>8?' 等':''):'')
     +(changed.length?'\n修改 '+changed.length+' 部作品：\n'+changed.slice(0,12).join('\n')+(changed.length>12?'\n……另有 '+(changed.length-12)+' 部':''):'')
+    +(addedPaths.length?'\n新增 '+addedPaths.length+' 条主题路径：'+addedPaths.join('、'):'')
+    +(updatedPaths.length?'\n补充已有路径关联：'+updatedPaths.join('、'):'')
     +(skipped.length?'\n\n跳过 '+skipped.length+' 条已收藏或未匹配记录':'')
-    +'\n\n只更改补丁指定字段，其他进度、笔记、历史想法和主题路径保留。'
+    +'\n\n仅修改补丁指定的作品字段；既有主题路径只增加关联，不删除原关联。其他进度、笔记和历史想法保留。'
     +'\n建议先从「备份」导出资料。\n\n确认应用更新吗？';
   if(!confirm(preview))return;
-  try{localStorage.setItem(KEY,JSON.stringify(next))}
-  catch(e){alert('存储失败：原数据未改变。请先导出备份。');return}
-  works=next;visibleLimit=18;render();
-  alert('更新完成：新增 '+added.length+' 部，修改 '+changed.length+' 部，跳过 '+skipped.length+' 条。');
+  const oldWorks=localStorage.getItem(KEY),oldPaths=localStorage.getItem(PATHKEY);
+  try{
+   localStorage.setItem(KEY,JSON.stringify(next));
+   localStorage.setItem(PATHKEY,JSON.stringify(nextPaths));
+  }catch(e){
+   try{if(oldWorks===null)localStorage.removeItem(KEY);else localStorage.setItem(KEY,oldWorks);
+    if(oldPaths===null)localStorage.removeItem(PATHKEY);else localStorage.setItem(PATHKEY,oldPaths)}catch(rollbackError){}
+   alert('存储失败：已尝试恢复原数据。请检查存储空间并导出备份。');return;
+  }
+  works=next;paths=nextPaths;visibleLimit=18;render();
+  alert('更新完成：新增 '+added.length+' 部作品，修改 '+changed.length+' 部作品，新增 '+addedPaths.length+' 条路径，补充 '+updatedPaths.length+' 条已有路径，跳过 '+skipped.length+' 条。');
  }catch(e){alert('作品库更新失败：'+e.message+'\n请使用精神漫游的 JSON 补充包或更新包。')}
 }
 
